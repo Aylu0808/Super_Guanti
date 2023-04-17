@@ -4,6 +4,7 @@
 #include <TimerOne.h>
 #include <Servo.h>
 /* 
+ * Aca esta pegado lo que estaba en el proyecto 1.1 
  *  CODIGO CON LOS SERVOS, BLUETOOTH, INFRAS, 74HC595, LCD CON I2C Y CUENTA REGRRESIVA
  * 
  *  Se esta probando en fisico (omitiendo la parte de los servos)
