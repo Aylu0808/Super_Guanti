@@ -9,7 +9,7 @@
  *  Se esta probando en fisico (omitiendo la parte de los servos)
  *  no funciona la parte del encendido de leds
  * 
- * Comentario de magali a ver si funciona esta mierdaaa daleee
+ * Comentario de magali para romper las bolas
 */
 
 #define infra1 A0
