@@ -9,7 +9,7 @@
  *  Se esta probando en fisico (omitiendo la parte de los servos)
  *  no funciona la parte del encendido de leds
  * 
- * Comentario de prueba de magali
+ * Comentario de prueba de magali x2
 */
 
 #define infra1 A0
