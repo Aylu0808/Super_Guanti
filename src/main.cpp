@@ -10,6 +10,7 @@
  *  no funciona la parte del encendido de leds
 */
 
+//Holis soy magali haciendo comentarios ´para boludear
 
 #define infra1 A0
 #define infra2 A1 
