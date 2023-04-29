@@ -25,6 +25,7 @@
  * - servos
  * - bluetooth
  *
+ * Hola este es un cambio de magali 29/04/2023 17:03
 */
 
 #include <Wire.h>
