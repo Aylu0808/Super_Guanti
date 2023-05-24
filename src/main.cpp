@@ -1,6 +1,6 @@
 /* https://html.alldatasheet.com/html-pdf/12198/ONSEMI/74HC595/181/1/74HC595.html (HOJA DE DATOS DEL 74HC595)
 
-  SE USA PULL UP EN TODO
+  SE USA PULL DOWN
 
  * CODIGO CON :
  * - I2C
@@ -14,18 +14,22 @@
  * NO TIENE:
  * - Cuenta general
  *
+ * CAMBIAR LOS PINES
+ * 
+ * 
  *  
  * PROBADO
  * - funcionamiento de leds 
  * - funcionamiento de pulsadores 
  * - El incremento de viajes
  * - funcionamiento de infras
- * 
- * FALTA
  * - servos
  * - bluetooth
- *
- * Hola este es un cambio de magali 29/04/2023 17:03
+ * 
+ * NO SE PROBO
+ * - cuenta general
+ * - conteo de cada dedo
+ * 
 */
 
 #include <Wire.h>
@@ -72,10 +76,23 @@ volatile int grados1 = 90;
 volatile int grados2 = 90;
 volatile int state = 0;
 
+volatile int seg = 0;
+volatile int min = 0;
+volatile int hs = 0;
+
+volatile int flagFinal = 0;
+
+volatile int indice = 0;
+volatile int anular = 0;
+volatile int mayor = 0;
+volatile int menique = 0;
+
+
 void cantViajes();
 void cuentaRegresiva();
 void juego();
 void finDelJuego();
+void conteoGeneral();
 
 void derecha(); //servo 1
 void izquierda();
@@ -134,7 +151,7 @@ void loop(){
     cantViajes();
   }
   else 
-  { 
+  {
     switch (flagRegresion){
       /*
       * flagRegresion se utiliza para ir avanzando en los pasos del programa 
@@ -164,6 +181,9 @@ void loop(){
         lcd.setCursor(0, 1);
         lcd.print("                ");
 
+        Timer1.initialize(1000000); // 1s
+        Timer1.attachInterrupt(conteoGeneral);
+
         if (activacionJuego == 0)
         {
           juego();
@@ -179,6 +199,7 @@ void loop(){
           }
           if (contadorViajes >= numViajes)
           {
+            flagFinal = 1;
             lcd.clear();
             finDelJuego();
           }
@@ -197,18 +218,22 @@ void loop(){
         if (state == '1'){
           derecha();
           state = 0;
+          indice++;
         }
         if (state == '2'){
           izquierda();
           state = 0;
+          anular++;
         }
         if (state == '3'){
           arriba();
           state = 0;
+          mayor++;
         }
         if (state == '4'){
           abajo();
           state = 0;
+          menique++;
         }
       break;
     }
@@ -220,16 +245,16 @@ void cantViajes(){
    * Si se pulsa el boton inicio se termina la configuracion de cantidad de viajes e inicia la cuenta regresiva
   */
   do{
-    if(digitalRead(incremento) == LOW){
+    if(digitalRead(incremento) == HIGH){
       delay(300);
 
       numViajes++;
       lcd.setCursor(0,1);
       lcd.print(numViajes);
     } 
-  }while(digitalRead(inicio) == HIGH);
+  }while(digitalRead(inicio) == LOW);
 
-  if (digitalRead(inicio) == LOW) {
+  if (digitalRead(inicio) == HIGH) {
     delay(300);
     aceptacion = 1;
     lcd.clear(); //el clear esta aca para que se ejecute solo una vez
@@ -237,7 +262,7 @@ void cantViajes(){
 }
 void juego() {
   /* 
-   * Genera un numero aleatorio, el cuel no puede ser igual al anterior
+   * Genera un numero aleatorio, el cual no puede ser igual al anterior
    * 
    * Dependiendo de ese numero se marca que salida debe tener el 74hc595
    * 
@@ -290,8 +315,7 @@ void juego() {
     break;
   }
 }
-void cuentaRegresiva()
-{
+void cuentaRegresiva(){
   /* Esto funciona de forma interrumpida por el Timer1 cada 1seg
    *
    * regresion sera la cuenta propiamente dicho
@@ -299,8 +323,8 @@ void cuentaRegresiva()
   */
   regresion = 5 - (aux++);
 
-  if (regresion <= 0)
-  {
+  if (regresion <= 0){
+    
     flagRegresion = 2;
   }
 }
@@ -308,17 +332,44 @@ void finDelJuego(){
 
 /*Es el mensaje que se mostrara al finalizar el juego
   
-  Aca tambien se pueden agregar para mostrar la cantidad de veces que se toco cada dedo y la cuenta general
+  Se muestra un mensaje de felicitaciones
+  Se muestra el tiempo general desde que se inicio el juego hasta que se finaliza
+  Se muestra la cantidad de veces que se pulso con cada dedo
 */
   lcd.setCursor(0, 0);
   lcd.print("  Felicidades!  ");
   lcd.setCursor(0, 1);
   lcd.print(" Fin del juego! ");
   delay(8000);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(" Su tiempo fue: ");
+  lcd.setCursor(0, 1);
+  lcd.print(hs":"min":"seg);
+  delay(8000);
+
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Indice:");
+  lcd.print(indice);
+  lcd.setCursor(0,1);
+  lcd.print("Anular:");
+  lcd.print(anular);
+  delay(8000);
+
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Mayor:");
+  lcd.print(mayor);
+  lcd.setCursor(0,1);
+  lcd.print("Meñique:");
+  lcd.print(menique);
+  delay(8000);
 }
 void derecha(){
   grados1++;
-  
+
   if(grados1 >= 180){  
     grados1 = 180;
   }
@@ -359,4 +410,17 @@ void abajo(){
   delay(10);
   miservo_3.write(grados2);
   delay(10);
+}
+void conteoGeneral(){
+  if(flagFinal == 0){
+    seg++;
+    if(seg == 60){
+      min++;
+      seg = 0;
+      if(min == 60){
+        hs++;
+        min = 0;
+      }
+    }
+  }
 }
