@@ -1,4 +1,4 @@
-/* https://html.alldatasheet.com/html-pdf/12198/ONSEMI/74HC595/181/1/74HC595.html (HOJA DE DATOS DEL 74HC595)
+/*
 
   SE USA PULL DOWN
 
@@ -10,21 +10,10 @@
  * - Infras
  * 
  * - Cuenta regresiva
- * 
- * NO TIENE:
- * - Cuenta general
  *
+ * 
  * CAMBIAR LOS PINES
- * 
- * 
  *  
- * PROBADO
- * - funcionamiento de leds 
- * - funcionamiento de pulsadores 
- * - El incremento de viajes
- * - funcionamiento de infras
- * - servos
- * - bluetooth
  * 
  * NO SE PROBO
  * - cuenta general
@@ -55,7 +44,7 @@
 
 Servo miservo_1; // servo 1 derecha izquierda
 Servo miservo_2; // Servo 2 y 3 hacen lo msimo por que es para estabilizacion
-Servo miservo_3; // servo 2 y 3 arriab y abajo
+Servo miservo_3; // servo 2 y 3 arriab y atras
 
 LiquidCrystal_I2C lcd(0x3F, 16, 2); //Va conectado al A5 y al A4
 
@@ -72,8 +61,9 @@ volatile int aleatorio = 0;
 volatile int regresion;
 volatile int aux = 0;
 
-volatile int grados1 = 90;
-volatile int grados2 = 90;
+volatile int grados1 = 0;
+volatile int grados2 = 0;
+volatile int grados3 = 0;
 volatile int state = 0;
 
 volatile int seg = 0;
@@ -94,10 +84,10 @@ void juego();
 void finDelJuego();
 void conteoGeneral();
 
-void derecha(); //servo 1
+void derecha(); //servo 1 -- 9
 void izquierda();
-void arriba();//servo 2 y 3
-void abajo();
+void adelante();
+void atras();
 
 void setup()
 {
@@ -131,14 +121,14 @@ void setup()
   pinMode(clockPin, OUTPUT);
   pinMode(dataPin, OUTPUT);
 
-  miservo_1.attach(6, 750, 1800); // EL 2 ES EL PIN DONDE ESTA CONECTADO EL 750 ES EL 0 Y EL 1800 POR LOS 180°
+  miservo_1.attach(9, 350, 2900); 
   miservo_1.write(grados1);
 
-  miservo_2.attach(5, 750, 1800); // EL 2 ES EL PIN DONDE ESTA CONECTADO EL 750 ES EL 0 Y EL 1800 POR LOS 180°
+  miservo_2.attach(6, 1000, 2000); 
   miservo_2.write(grados2);
 
-  miservo_3.attach(3, 750, 1800); // EL 2 ES EL PIN DONDE ESTA CONECTADO EL 750 ES EL 0 Y EL 1800 POR LOS 180°
-  miservo_3.write(grados2);
+  miservo_3.attach(11, 1000, 2000); 
+  miservo_3.write(grados3);//este tiene que llegar a 30° y se maneja con un unico pulsador
 }
 
 void loop(){
@@ -226,15 +216,16 @@ void loop(){
           anular++;
         }
         if (state == '3'){
-          arriba();
+          adelante();
           state = 0;
           mayor++;
         }
         if (state == '4'){
-          abajo();
+          atras();
           state = 0;
           menique++;
         }
+        if(state == '5' )
       break;
     }
   }
@@ -387,7 +378,7 @@ void izquierda(){
   miservo_1.write(grados1);
   delay(10);
 }
-void arriba(){
+void adelante(){
   grados2++;
   
   if(grados2 >= 180){ 
@@ -396,10 +387,8 @@ void arriba(){
   
   miservo_2.write(grados2);
   delay(10);
-  miservo_3.write(grados2);
-  delay(10);
 }
-void abajo(){
+void atras(){
   grados2--;
   
   if(grados2 <= 0){ 
@@ -407,8 +396,6 @@ void abajo(){
   }
   
   miservo_2.write(grados2);
-  delay(10);
-  miservo_3.write(grados2);
   delay(10);
 }
 void conteoGeneral(){
