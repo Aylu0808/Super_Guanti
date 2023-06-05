@@ -1,24 +1,8 @@
 /*
-
-  SE USA PULL DOWN
-
- * CODIGO CON :
- * - I2C
- * - 74hc595
- * - Bluetooth
- * - Servos
- * - Infras
+ * Programa para el atmega esclavo 
  * 
- * - Cuenta regresiva
- *
- * 
- * CAMBIAR LOS PINES
- *  
- * 
- * NO SE PROBO
- * - cuenta general
- * - conteo de cada dedo
- * 
+ * Falta agregarle una cuenta que muestre el tiempo total que se tardo en terminar el juego
+ * Tambien los contadores que muestren la cantidad de veces que se pulso cada dedo 
 */
 
 #include <Wire.h>
@@ -27,18 +11,15 @@
 #include <VarSpeedServo.h>
 
 
-//queda libre el pin 2, 12, 13
-//0 y 1 son Rx y tx son para el bluetooth
-
 #define infra1 A0
 #define infra2 A1
 #define infra3 A2
 #define infra4 A3
 #define infra5 4
 
-#define pinLatch 7  // es la patita SH_CP
-#define clockPin 8 // es la patita DS
-#define dataPin 9  // es la patita ST_CP
+#define pinLatch 7  // 74hc595
+#define clockPin 8 
+#define dataPin 5  
 
 #define incremento 10
 #define inicio 12 //revisar si esto coincide con la conexion de la plaqueta
@@ -51,6 +32,7 @@ volatile int numViajes = 0;
 volatile int aceptacion = 0;
 
 volatile int flagRegresion = 0;
+
 volatile int contadorViajes = 0;
 volatile int numAnterior = 0;
 
@@ -64,32 +46,13 @@ volatile int grados1 = 0;
 volatile int grados2 = 0;
 volatile int grados3 = 0;
 volatile int state = 0;
-/*
-volatile int seg = 0;
-volatile int min = 0;
-volatile int hs = 0;*/
 
 volatile int flagFinal = 0;
-
-// volatile int indice = 0;
-// volatile int anular = 0;
-// volatile int mayor = 0;
-// volatile int menique = 0;
-
-volatile int rapido = 200;
-volatile int normal = 0;
 
 void cantViajes();
 void cuentaRegresiva();
 void juego();
 void finDelJuego();
-
-void conteoGeneral();
-void derecha(); 
-void izquierda();
-void adelante();
-void atras();
-void abajo();
 
 void setup()
 {
@@ -131,6 +94,10 @@ void setup()
 
   miservo_3.attach(11, 1000, 2000); //servo de la izqueirda, abajo
   miservo_3.write(grados3);
+
+  digitalWrite(pinLatch, LOW);              
+  shiftOut(dataPin, clockPin, MSBFIRST, 0); 
+  digitalWrite(pinLatch, HIGH);
 }
 
 void loop(){
@@ -173,10 +140,7 @@ void loop(){
         lcd.setCursor(0, 1);
         lcd.print("                ");
 
-        // Timer1.initialize(1000000); // 1s
-        // Timer1.attachInterrupt(conteoGeneral);
-
-        while(activacionJuego == 0){
+        if(activacionJuego == 0){
           juego();
         }
         if (digitalRead(infra1) == HIGH || digitalRead(infra2) == HIGH || digitalRead(infra3) == HIGH || digitalRead(infra4) == HIGH || digitalRead(infra5) == HIGH)
@@ -196,12 +160,13 @@ void loop(){
           }
         }
 
-        /* Mientras el juego esta funcionando, se llama a las funciones
-         * que manejan la grua dependiendo de los datos que se reciben del bluetooth
-         *
-         * Despues se podria probar con las funciones que estan declaradas abajo, (derecha, izquierda, atras, adelante, abajo)
-        */
+        /* Mientras el juego esta funcionando, se mandan instrucciones a la grua 
+         * dependiendo de los datos que se reciben del bluetooth
 
+         * El funcionamiento de los servos tambien se probo con un switch y la variable state (funciona)
+
+         * El servo 3
+        */
         if (Serial.available()){
 
           state = Serial.read(); 
@@ -213,7 +178,7 @@ void loop(){
               grados1 = 180;
             }
             
-            miservo_1.write(grados1, normal);
+            miservo_1.write(grados1, 0);
             delay(10);
           }
           if(state == '2'){
@@ -222,18 +187,18 @@ void loop(){
               grados1 = 0;
             }
             
-            miservo_1.write(grados1, normal);
+            miservo_1.write(grados1, 0);
             delay(10);
           }
 
-          ///SERVO 1 -- DERECHA IZQUIERDA -- 9///
+          ///SERVO 2 -- ADELANTE ATRAS -- 6///
           if(state == '3'){
             grados2++;
             if(grados2 >= 180){
               grados2 == 180;
             }
             
-            miservo_2.write(grados2, normal);
+            miservo_2.write(grados2, 200);
             delay(10);
           }
           if(state == '4'){
@@ -242,7 +207,7 @@ void loop(){
               grados2 == 0;
             }
             
-            miservo_2.write(grados2, normal);
+            miservo_2.write(grados2, 200);
             delay(10);
           }
 
@@ -253,7 +218,7 @@ void loop(){
               grados3 = 90;
             }
               
-            miservo_3.write(grados3, rapido);
+            miservo_3.write(grados3, 0);
             delay(15);
           }  
         }
@@ -266,7 +231,7 @@ void cantViajes(){
    *
    * Si se pulsa el boton inicio se termina la configuracion de cantidad de viajes e inicia la cuenta regresiva
   */
-  do{
+  while(digitalRead(inicio) == HIGH){
     if(digitalRead(incremento) == LOW){
       delay(300);
 
@@ -274,7 +239,7 @@ void cantViajes(){
       lcd.setCursor(0,1);
       lcd.print(numViajes);
     } 
-  }while(digitalRead(inicio) == HIGH);
+  }
 
   if (digitalRead(inicio) == LOW) {
     delay(300);
@@ -351,107 +316,13 @@ void cuentaRegresiva(){
   }
 }
 void finDelJuego(){
-
 /*Es el mensaje que se mostrara al finalizar el juego
-  
-  Se muestra un mensaje de felicitaciones
-  Se muestra el tiempo general desde que se inicio el juego hasta que se finaliza
-  Se muestra la cantidad de veces que se pulso con cada dedo
+ *
+ * Se muestra un mensaje de felicitaciones
 */
   lcd.setCursor(0, 0);
   lcd.print("  Felicidades!  ");
   lcd.setCursor(0, 1);
   lcd.print(" Fin del juego! ");
   delay(8000);
-/*
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(" Su tiempo fue: ");
-  lcd.setCursor(0, 1);
-  lcd.print(hs":"min":"seg);
-  delay(8000);
-
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Indice:");
-  lcd.print(indice);
-  lcd.setCursor(0,1);
-  lcd.print("Anular:");
-  lcd.print(anular);
-  delay(8000);
-
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Mayor:");
-  lcd.print(mayor);
-  lcd.setCursor(0,1);
-  lcd.print("Meñique:");
-  lcd.print(menique);
-  delay(8000);*/
 }
-/*
-void derecha(){
-  grados1++;
-
-  if(grados1 >= 180){  
-    grados1 = 180;
-  }
-  
-  miservo_1.write(grados1);
-  delay(10);
-}
-void izquierda(){
-  grados1--;
-  
-  if(grados1 <= 0){ 
-    grados1 = 0;
-  }
-  
-  miservo_1.write(grados1);
-  delay(10);
-}
-void adelante(){
-  grados2++;
-  
-  if(grados2 >= 180){ 
-    grados2 = 180;
-  }
-  
-  miservo_2.write(grados2);
-  delay(10);
-}
-void atras(){
-  grados2--;
-  
-  if(grados2 <= 0){ 
-    grados2 = 0;
-  }
-  
-  miservo_2.write(grados2);
-  delay(10);
-}
-void abajo(){
-   grados3--;        
-      if(grados3<=0){
-        grados3 = 90;
-      }
-        
-      miservo_3.write(grados3, rapido);
-      delay(15);
-}
-*/
-/*
-void conteoGeneral(){
-  if(flagFinal == 0){
-    seg++;
-    if(seg == 60){
-      min++;
-      seg = 0;
-      if(min == 60){
-        hs++;
-        min = 0;
-      }
-    }
-  }
-}
-*/
