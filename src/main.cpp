@@ -24,7 +24,8 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <TimerOne.h>
-#include <Servo.h>
+#include <VarSpeedServo.h>
+
 
 //queda libre el pin 2, 12, 13
 //0 y 1 son Rx y tx son para el bluetooth
@@ -42,9 +43,9 @@
 #define incremento 10
 #define inicio 11
 
-Servo miservo_1; // servo 1 derecha izquierda
-Servo miservo_2; // Servo 2 y 3 hacen lo msimo por que es para estabilizacion
-Servo miservo_3; // servo 2 y 3 arriab y atras
+Servo miservo_1; 
+Servo miservo_2; 
+Servo miservo_3; 
 
 LiquidCrystal_I2C lcd(0x3F, 16, 2); //Va conectado al A5 y al A4
 
@@ -72,26 +73,30 @@ volatile int hs = 0;
 
 volatile int flagFinal = 0;
 
-volatile int indice = 0;
-volatile int anular = 0;
-volatile int mayor = 0;
-volatile int menique = 0;
+// volatile int indice = 0;
+// volatile int anular = 0;
+// volatile int mayor = 0;
+// volatile int menique = 0;
 
+
+volatile int rapido = 200;
+volatile int normal = 0;
 
 void cantViajes();
 void cuentaRegresiva();
 void juego();
 void finDelJuego();
-void conteoGeneral();
 
-void derecha(); //servo 1 -- 9
+void conteoGeneral();
+void derecha(); 
 void izquierda();
 void adelante();
 void atras();
+void abajo();
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(57600); 
 
   lcd.init();
   lcd.backlight();
@@ -121,14 +126,14 @@ void setup()
   pinMode(clockPin, OUTPUT);
   pinMode(dataPin, OUTPUT);
 
-  miservo_1.attach(9, 350, 2900); 
-  miservo_1.write(grados1);
+  miservo_1.attach(9, 350, 2900); //servo base, derecha-izquierda
+  miservo_1.write(grados1); 
 
-  miservo_2.attach(6, 1000, 2000); 
-  miservo_2.write(grados2);
+  miservo_2.attach(6, 1000, 2000); //servo de la derecha, adelante-atras
+  miservo_2.write(grados2); 
 
-  miservo_3.attach(11, 1000, 2000); 
-  miservo_3.write(grados3);//este tiene que llegar a 30° y se maneja con un unico pulsador
+  miservo_3.attach(11, 1000, 2000); //servo de la izqueirda, abajo
+  miservo_3.write(grados3);
 }
 
 void loop(){
@@ -171,14 +176,13 @@ void loop(){
         lcd.setCursor(0, 1);
         lcd.print("                ");
 
-        Timer1.initialize(1000000); // 1s
-        Timer1.attachInterrupt(conteoGeneral);
+        // Timer1.initialize(1000000); // 1s
+        // Timer1.attachInterrupt(conteoGeneral);
 
-        if (activacionJuego == 0)
-        {
+        while(activacionJuego == 0){
           juego();
         }
-        if (digitalRead(infra3) == HIGH || digitalRead(infra5) == HIGH || digitalRead(infra4) == HIGH || digitalRead(infra2) == HIGH || digitalRead(infra1) == HIGH)
+        if (digitalRead(infra1) == HIGH || digitalRead(infra2) == HIGH || digitalRead(infra3) == HIGH || digitalRead(infra4) == HIGH || digitalRead(infra5) == HIGH)
         {
           delay(500); // retencion del pulsador
           contadorViajes++;
@@ -199,33 +203,61 @@ void loop(){
          * que manejan la grua dependiendo de los datos que se reciben del bluetooth
         */
 
-        if (Serial.available() > 0){
+        if (Serial.available()){
 
-          state = Serial.read();
-          Serial.write(state);
-        }
+          state = Serial.read(); 
 
-        if (state == '1'){
-          derecha();
-          state = 0;
-          indice++;
+          ///SERVO 1 -- DERECHA IZQUIERDA -- 9///
+          if(state == '1'){
+            grados1++;
+            if(grados1 >= 180){
+              grados1 = 180;
+            }
+            
+            miservo_1.write(grados1, normal);
+            delay(10);
+          }
+          if(state == '2'){
+            grados1--; 
+            if(grados1 <= 0){
+              grados1 = 0;
+            }
+            
+            miservo_1.write(grados1, normal);
+            delay(10);
+          }
+
+          ///SERVO 1 -- DERECHA IZQUIERDA -- 9///
+          if(state == '3'){
+            grados2++;
+            if(grados2 >= 180){
+              grados2 == 180;
+            }
+            
+            miservo_2.write(grados2, normal);
+            delay(10);
+          }
+          if(state == '4'){
+            grados2--;
+            if(grados2 >= 0){
+              grados2 == 0;
+            }
+            
+            miservo_2.write(grados2, normal);
+            delay(10);
+          }
+
+          ///SERVO 3 -- ABAJO -- 11///
+          if(state == '5'){    
+            grados3--;        
+            if(grados3<=0){
+              grados3 = 90;
+            }
+              
+            miservo_3.write(grados3, rapido);
+            delay(15);
+          }  
         }
-        if (state == '2'){
-          izquierda();
-          state = 0;
-          anular++;
-        }
-        if (state == '3'){
-          adelante();
-          state = 0;
-          mayor++;
-        }
-        if (state == '4'){
-          atras();
-          state = 0;
-          menique++;
-        }
-        if(state == '5' )
       break;
     }
   }
@@ -332,7 +364,7 @@ void finDelJuego(){
   lcd.setCursor(0, 1);
   lcd.print(" Fin del juego! ");
   delay(8000);
-
+/*
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(" Su tiempo fue: ");
@@ -356,8 +388,9 @@ void finDelJuego(){
   lcd.setCursor(0,1);
   lcd.print("Meñique:");
   lcd.print(menique);
-  delay(8000);
+  delay(8000);*/
 }
+/*
 void derecha(){
   grados1++;
 
@@ -398,6 +431,17 @@ void atras(){
   miservo_2.write(grados2);
   delay(10);
 }
+void abajo(){
+   grados3--;        
+      if(grados3<=0){
+        grados3 = 90;
+      }
+        
+      miservo_3.write(grados3, rapido);
+      delay(15);
+}
+*/
+/*
 void conteoGeneral(){
   if(flagFinal == 0){
     seg++;
@@ -411,3 +455,4 @@ void conteoGeneral(){
     }
   }
 }
+*/
