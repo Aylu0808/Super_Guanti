@@ -41,11 +41,9 @@
 #define dataPin 9  // es la patita ST_CP
 
 #define incremento 10
-#define inicio 11
+#define inicio 12 //revisar si esto coincide con la conexion de la plaqueta
 
-Servo miservo_1; 
-Servo miservo_2; 
-Servo miservo_3; 
+VarSpeedServo miservo_1, miservo_2, miservo_3;
 
 LiquidCrystal_I2C lcd(0x3F, 16, 2); //Va conectado al A5 y al A4
 
@@ -66,10 +64,10 @@ volatile int grados1 = 0;
 volatile int grados2 = 0;
 volatile int grados3 = 0;
 volatile int state = 0;
-
+/*
 volatile int seg = 0;
 volatile int min = 0;
-volatile int hs = 0;
+volatile int hs = 0;*/
 
 volatile int flagFinal = 0;
 
@@ -77,7 +75,6 @@ volatile int flagFinal = 0;
 // volatile int anular = 0;
 // volatile int mayor = 0;
 // volatile int menique = 0;
-
 
 volatile int rapido = 200;
 volatile int normal = 0;
@@ -201,6 +198,8 @@ void loop(){
 
         /* Mientras el juego esta funcionando, se llama a las funciones
          * que manejan la grua dependiendo de los datos que se reciben del bluetooth
+         *
+         * Despues se podria probar con las funciones que estan declaradas abajo, (derecha, izquierda, atras, adelante, abajo)
         */
 
         if (Serial.available()){
@@ -268,16 +267,16 @@ void cantViajes(){
    * Si se pulsa el boton inicio se termina la configuracion de cantidad de viajes e inicia la cuenta regresiva
   */
   do{
-    if(digitalRead(incremento) == HIGH){
+    if(digitalRead(incremento) == LOW){
       delay(300);
 
       numViajes++;
       lcd.setCursor(0,1);
       lcd.print(numViajes);
     } 
-  }while(digitalRead(inicio) == LOW);
+  }while(digitalRead(inicio) == HIGH);
 
-  if (digitalRead(inicio) == HIGH) {
+  if (digitalRead(inicio) == LOW) {
     delay(300);
     aceptacion = 1;
     lcd.clear(); //el clear esta aca para que se ejecute solo una vez
