@@ -65,7 +65,7 @@ void setup()
   lcd.print("  Bienvenido a  ");
   lcd.setCursor(0, 1);
   lcd.print("  Super Guanti  ");
-  delay(1000);
+  delay(1000);  
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Una creacion de:");
@@ -120,7 +120,7 @@ void loop(){
         lcd.print("El juego inicia");
         lcd.setCursor(0, 1);
         lcd.print("     en: ");
-        flagRegresion = 1;
+        flagRegresion = 2; //me salteo el caso 1
       break;
       case 1:
         /*
@@ -128,11 +128,11 @@ void loop(){
         * 
         * tambien se muestra en pantalla
         */
-        Timer1.initialize(1000000); // 1s
-        Timer1.attachInterrupt(cuentaRegresiva);
+        // Timer1.initialize(1000000); // 1s
+        // Timer1.attachInterrupt(cuentaRegresiva);
 
-        lcd.setCursor(10, 1);
-        lcd.print(regresion);
+        // lcd.setCursor(10, 1);
+        // lcd.print(regresion);
       break;
       case 2:
         lcd.setCursor(0, 0);
@@ -145,8 +145,8 @@ void loop(){
         }
         if (digitalRead(infra1) == HIGH || digitalRead(infra2) == HIGH || digitalRead(infra3) == HIGH || digitalRead(infra4) == HIGH || digitalRead(infra5) == HIGH)
         {
-          delay(500); // retencion del pulsador
-          contadorViajes++;
+          // delay(500); // retencion del pulsador
+          contadorViajes=7;
 
           if (contadorViajes < numViajes)
           {
@@ -179,7 +179,7 @@ void loop(){
             }
             
             miservo_1.write(grados1, 0);
-            delay(10);
+            
           }
           if(state == '2'){
             grados1--; 
@@ -188,7 +188,7 @@ void loop(){
             }
             
             miservo_1.write(grados1, 0);
-            delay(10);
+            
           }
 
           ///SERVO 2 -- ADELANTE ATRAS -- 6///
@@ -199,7 +199,7 @@ void loop(){
             }
             
             miservo_2.write(grados2, 200);
-            delay(10);
+            
           }
           if(state == '4'){
             grados2--;
@@ -208,7 +208,7 @@ void loop(){
             }
             
             miservo_2.write(grados2, 200);
-            delay(10);
+            
           }
 
           ///SERVO 3 -- ABAJO -- 11///
@@ -219,7 +219,7 @@ void loop(){
             }
               
             miservo_3.write(grados3, 0);
-            delay(15);
+            
           }  
         }
       break;
@@ -231,18 +231,19 @@ void cantViajes(){
    *
    * Si se pulsa el boton inicio se termina la configuracion de cantidad de viajes e inicia la cuenta regresiva
   */
-  while(digitalRead(inicio) == HIGH){
-    if(digitalRead(incremento) == LOW){
-      delay(300);
+  while(digitalRead(inicio) = HIGH){
+    if(digitalRead(incremento) = LOW){
+      // delay(300);
 
-      numViajes++;
+      numViajes = 7;
       lcd.setCursor(0,1);
       lcd.print(numViajes);
+      digitalRead(inicio) = LOW;
     } 
   }
 
-  if (digitalRead(inicio) == LOW) {
-    delay(300);
+  if(digitalRead(inicio) = LOW) {
+    // delay(300);
     aceptacion = 1;
     lcd.clear(); //el clear esta aca para que se ejecute solo una vez
   }
@@ -302,19 +303,19 @@ void juego() {
     break;
   }
 }
-void cuentaRegresiva(){
-  /* Esto funciona de forma interrumpida por el Timer1 cada 1seg
-   *
-   * regresion sera la cuenta propiamente dicho
-   * cuando llegue a 0 se cambiara flagRegresion y ya no se volvera a esta funcion (se utiliza <=0 porque sino empieza a mostrar numeros negativos)
-  */
-  regresion = 5 - (aux++);
+// void cuentaRegresiva(){
+//   /* Esto funciona de forma interrumpida por el Timer1 cada 1seg
+//    *
+//    * regresion sera la cuenta propiamente dicho
+//    * cuando llegue a 0 se cambiara flagRegresion y ya no se volvera a esta funcion (se utiliza <=0 porque sino empieza a mostrar numeros negativos)
+//   */
+//   regresion = 5 - (aux++);
 
-  if (regresion <= 0){
+//   if (regresion <= 0){
     
-    flagRegresion = 2;
-  }
-}
+//     flagRegresion = 2;
+//   }
+// }
 void finDelJuego(){
 /*Es el mensaje que se mostrara al finalizar el juego
  *
@@ -324,5 +325,5 @@ void finDelJuego(){
   lcd.print("  Felicidades!  ");
   lcd.setCursor(0, 1);
   lcd.print(" Fin del juego! ");
-  delay(8000);
+  lcd.clear();
 }
