@@ -28,6 +28,18 @@ VarSpeedServo miservo_1, miservo_2, miservo_3;
 
 LiquidCrystal_I2C lcd(0x3F, 16, 2); //Va conectado al A5 y al A4
 
+volatile int t = 0;
+volatile int estadoRetencionIncremento = 0; 
+volatile int estadoRetencionInicio = 0; 
+
+volatile bool flagRetencionIncremento = FALSE;
+volatile bool flagPulsoIncremento = FALSE;
+
+volatile bool flagRetencionInicio = FALSE;
+volatile bool flagPulsoInicio = FALSE;
+
+
+
 volatile int numViajes = 0;
 volatile int aceptacion = 0;
 
@@ -231,22 +243,85 @@ void cantViajes(){
    *
    * Si se pulsa el boton inicio se termina la configuracion de cantidad de viajes e inicia la cuenta regresiva
   */
-  while(digitalRead(inicio) = HIGH){
-    if(digitalRead(incremento) = LOW){
-      // delay(300);
+ estadoRetencionIncremento = 1;
+ estadoRetencionInicio = 1;
 
-      numViajes = 7;
-      lcd.setCursor(0,1);
-      lcd.print(numViajes);
-      digitalRead(inicio) = LOW;
-    } 
+ switch(estadoRetencionIncremento){
+    case 1:
+      flagPulsoIncremento = FALSE;
+
+      if(digitalRead(incremento) == HIGH)
+        estadoRetencionIncremento = 1;
+
+      if(digitalRead(incremento) == LOW){
+        t = 0;
+        estadoRetencionIncremento = 2;
+      }
+    break;
+    case 2:
+      if(flagRetencionIncremento == FALSE)
+        estadoRetencionIncremento = 2;
+      if(flagRetencionIncremento == TRUE)
+        estadoRetencionIncremento = 3;
+    break;
+    case 3: 
+      if(digitalRead(incremento) == LOW){
+        flagPulsoIncremento = TRUE;
+        estadoRetencionIncremento = 1;
+      }
+      else{
+        flagPulsoIncremento = FALSE;
+        estadoRetencionIncremento = 1;
+      }
+    break;
+  }
+  switch(estadoRetencionInicio){
+    case 1:
+      flagPulsoInicio = FALSE;
+
+      if(digitalRead(inicio) == HIGH)
+        estadoRetencionInicio = 1;
+
+      if(digitalRead(inicio) == LOW){
+        t = 0;
+        estadoRetencionInicio = 2;
+      }
+    break;
+    case 2:
+      if(flagRetencionInicio == FALSE)
+        estadoRetencionInicio = 2;
+      if(flagRetencionInicio == TRUE)
+        estadoRetencionInicio = 3;
+    break;
+    case 3: 
+      if(digitalRead(inicio) == LOW){
+        flagPulsoInicio = TRUE;
+        estadoRetencionInicio = 1;
+      }
+      else{
+        flagPulsoInicio = FALSE;
+        estadoRetencionInicio = 1;
+      }
+    break;
+  }
+  
+  if(flagPulsoIncremento == TRUE && flagPulsoInicio == FALSE){
+    numViajes++;
+    lcd.setCursor(0,0);
+    lcd.print("Cant:");
+    lcd.print(numViajes);
+  }
+  else{
+    lcd.setCursor(0,0);
+    lcd.print("Inicio:");
   }
 
-  if(digitalRead(inicio) = LOW) {
-    // delay(300);
-    aceptacion = 1;
-    lcd.clear(); //el clear esta aca para que se ejecute solo una vez
-  }
+
+  // if(digitalRead(inicio) = LOW) {
+  //   // delay(300);
+  //   aceptacion = 1;
+  //   lcd.clear(); //el clear esta aca para que se ejecute solo una vez
+  // }
 }
 void juego() {
   /* 
@@ -326,4 +401,12 @@ void finDelJuego(){
   lcd.setCursor(0, 1);
   lcd.print(" Fin del juego! ");
   lcd.clear();
+}
+void tiempo(){
+  t++;
+  
+  if(t >= 100)
+    flagRetencion = TRUE;
+  else
+    flagRetencion = FALSE;
 }
